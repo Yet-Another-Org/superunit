@@ -1,0 +1,97 @@
+#!/usr/bin/env php
+<?php
+require_once dirname(__DIR__) . '/autoload.php';
+
+use SuperUnit\SuperUnit;
+use SuperUnit\SuperUnitType;
+
+function usage()
+{
+	// info
+	$info = json_decode(file_get_contents(dirname(__DIR__) . '/composer.json'));
+	if (!isset($info->version)) {
+		$info->version = 'unknown';
+	}
+
+	// types
+	$sut = new SuperUnitType;
+	$defs = $sut->getDefs();
+	$def = '';
+	foreach($defs as $name => $item) {
+		$def .= sprintf("%14s -- %s\n", $name, $sut->description($name));
+	}
+
+	print <<<EOF
+superunit [options] -- a special code generator for fast php prototype and content validation
+  author: {$info->authors[0]->name} <{$info->authors[0]->email}>
+  version: {$info->version}
+  encoding: utf-8
+
+options:
+  -c <file> ---- standard file, if not set, use stdin
+  -F <sep> ---- seperator, default is ' : '
+  -h ---- show this help
+
+supported types:
+{$def}examples:
+  echo "name:yarco age:36 sex:male\!female email:yarco.wang@gmail.com password:****** info:balabla,balabla,balabla,balabla,balabla,balabla,balabla" | superunit -F:
+  echo "name:yarco age:36 sex:male\!female" > test && (echo "name:yarco age:36" | superunit -F: -c ./test)
+\n
+EOF;
+}
+
+$opts = getopt('c:F:h');
+
+if (isset($opts['h'])) {
+	exit(usage());
+}
+
+// read from stdin
+$tmp = file_get_contents('php://stdin', 'r');
+if (isset($opts['c'])) {
+	$std = file_get_contents($opts['c']);
+	$hasStd = true;
+} else {
+	$std = $tmp;
+	$hasStd = false;
+}
+
+$sep = isset($opts['F']) && !empty($opts['F']) ? $opts['F'] : ' : ';
+
+$su = new SuperUnit;
+$su->fromString($std, $sep)->determine();
+
+if ($hasStd) { // do validation
+	$ret = $su->validate($tmp, $sep);
+	if ($ret !== true) {
+		printf("%'-20s%'-14s%'-14s--\n", 'Key', 'Want', 'Get');
+		printf("|%19s%14s%14s |\n", $ret['key'], $ret['want'], $ret['get']);
+		printf("%'-50s\n", '');
+	}
+	exit;
+}
+
+// show type
+printf("%'-20s%'-14s%'-44s--\n", 'Key', 'Type', 'Value');
+foreach($su->ExTp as $name => $tp) {
+	$value = strlen($su->Ex[$name]) > 38 ? substr(str_replace("\n", "\\n", $su->Ex[$name]), 0, 38) . '...' : str_replace("\n", "\\n", $su->Ex[$name]);
+	printf("|%19s%14s%44s |\n", strlen($name) > 19 ? substr($name, 0, 16) . '...' : $name, $tp, $value);
+};
+// show Add Form
+printf("%'-44s%'-36s\n", 'Add Form', '');
+foreach($su->form() as $el) {
+	printf("%s\n", $el);
+}
+print "\n";
+// show Edit Form
+printf("%'-44s%'-36s\n", 'Edit Form', '');
+foreach($su->form(true) as $el) {
+	printf("%s\n", $el);
+}
+print "\n";
+// show Dump Mysql
+printf("%'-45s%'-35s\n", 'Dump Mysql', '');
+foreach($su->mysql() as $el) {
+	printf("%s,\n", $el);
+}
+

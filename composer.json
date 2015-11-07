@@ -1,0 +1,27 @@
+{
+    "name": "yarco/superunit",
+		"type": "library",
+    "description": "a special code generator for fast php prototype and content validation",
+    "authors": [
+        {
+            "name": "Yarco",
+            "email": "yarco.wang@gmail.com",
+						"homepage": "http://www.bbish.net"
+        }
+    ],
+		"homepage": "https://github.com/Yet-Another-Org/superunit",
+		"license": "MIT",
+		"support": {
+			"issues": "https://github.com/Yet-Another-Org/superunit/issues"
+		},
+    "require": {
+			"php": ">=5.5",
+			"ext-mbstring": "*"
+		},
+		"bin": ["bin/superunit"],
+		"autoload": {
+			"psr-4": {
+				"SuperUnit\\": "src/"
+			}
+		}
+}
