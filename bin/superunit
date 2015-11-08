@@ -60,7 +60,7 @@ plugin: should be one of `$t`
 supported types:
 {$def}
 examples:
-  echo "name:yarco age:36 sex:male\!female email:yarco.wang@gmail.com password:****** info:balabla,balabla,balabla,balabla,balabla,balabla,balabla" | superunit -F:
+  echo "name:yarco age:36 sex:male\!female email:yarco.wang@gmail.com password:****** info:balabla,balabla,balabla,balabla,balabla,balabla,balabla date:Nov 5, 2015 3:12 PM EST" | superunit -F:
   echo "name:yarco age:36 sex:male\!female" > test && (echo "name:yarco age:36" | superunit -F: -c ./test)
 \n
 EOF;

@@ -69,7 +69,7 @@ class SuperUnitType
 				return sprintf("`%s` INTEGER NOT NULL DEFAULT 0", self::sanitizeName($name));
 			},
 		];
-		self::$_defsOrder->insert('int', 40);
+		self::$_defsOrder->insert('int', 115);
 		// }}}
 		// float type {{{
 		self::$_defs['float'] = [
@@ -86,7 +86,7 @@ class SuperUnitType
 				return sprintf("`%s` DOUBLE NOT NULL DEFAULT 0.0", self::sanitizeName($name));
 			},
 		];
-		self::$_defsOrder->insert('float', 30);
+		self::$_defsOrder->insert('float', 110);
 		// }}}
 		// password type {{{
 		self::$_defs['password'] = [
@@ -195,10 +195,10 @@ class SuperUnitType
 		// datetime type {{{
 		self::$_defs['datetime'] = [
 			'description' => function() {
-				return "the value should match `^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}(?::\d{2})?$`";
+				return "the value should match `^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}(?::\d{2})?$` or can be converted by `strtotime`";
 			},
 			'determine' => function($name, $value) {
-				return filter_var($value, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '|^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}(?::\d{2})?$|']]);
+				return strtotime($value) !== false || filter_var($value, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '|^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}(?::\d{2})?$|']]);
 			},
 			'form' => function($name, $value, $isEdit = false) {
 				return sprintf('<input type="datetime-local" name="%s" value="%s" />', self::sanitizeName($name), $isEdit ? self::sanitizeValue($value) : '');
@@ -207,7 +207,7 @@ class SuperUnitType
 				return sprintf("`%s` TIMESTAMP NOT NULL DEFAULT 0", self::sanitizeName($name));
 			},
 		];
-		self::$_defsOrder->insert('datetime', 65);
+		self::$_defsOrder->insert('datetime', 55);
 		// }}}		
 		// choice type {{{
 		self::$_defs['choice'] = [

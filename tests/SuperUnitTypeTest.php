@@ -70,7 +70,7 @@ class SuperUnitTypeTest extends PHPUnit_Framework_TestCase
 		foreach($sut->defsOrder() as $tp => $p) {
 			$ret .= $tp . $p;
 		}
-		$this->assertEquals('id120password100color90email80url70datetime65date60time60choice50multi-choice50int40float30string20text0', $ret);
+		$this->assertEquals('id120int115float110password100color90email80url70date60time60datetime55multi-choice50choice50string20text0', $ret);
 	}
 
 	public function testDefaultTypes()
