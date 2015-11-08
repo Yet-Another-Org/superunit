@@ -1,9 +1,13 @@
 #!/usr/bin/env php
 <?php
+define('PLUGINS_DIR', dirname(__DIR__) . '/plugins');
+
 require_once dirname(__DIR__) . '/autoload.php';
 
 use SuperUnit\SuperUnit;
-use SuperUnit\SuperUnitType;
+
+$opts = getopt('c:F:hp:');
+$su = new SuperUnit;
 
 // info
 $info = json_decode(file_get_contents(dirname(__DIR__) . '/composer.json'));
@@ -11,8 +15,21 @@ if (!isset($info->version)) {
 	$info->version = 'unknown';
 }
 
+// plugins
+$plugins = [];
+foreach(glob(PLUGINS_DIR . '/*.php') as $file) {
+	$plugins[strtolower(basename($file, '.php'))] = $file;
+}
+
+// set plugin
+if (isset($opts['p']) && isset($plugins[$opts['p']])) {
+	$class = $opts['p'];
+	include_once $plugins[$class];
+	$su->setPlugin(new $class);
+}
+
 // types
-$sut = new SuperUnitType;
+$sut = $su->getSut();
 $defs = $sut->getDefs();
 $def = sprintf("  %s%10s -- %s\n", 'Priority', 'Type', 'Definition');
 foreach($sut->defsOrder() as $name => $p) {
@@ -22,7 +39,9 @@ foreach($sut->defsOrder() as $name => $p) {
 
 function usage()
 {
-	global $info, $def;
+	global $info, $def, $plugins;
+
+	$t = implode(', ', array_keys($plugins));
 
 	print <<<EOF
 superunit [options] -- a special code generator for fast php prototype and content validation
@@ -34,6 +53,9 @@ options:
   -c <file> ---- standard file, if not set, use stdin
   -F <sep> ---- seperator, default is ' : '
   -h ---- show this help
+  -p <plugin> ---- load the plugin
+
+plugin: should be one of `$t`
 
 supported types:
 {$def}
@@ -43,8 +65,6 @@ examples:
 \n
 EOF;
 }
-
-$opts = getopt('c:F:h');
 
 if (isset($opts['h'])) {
 	exit(usage());
@@ -61,8 +81,6 @@ if (isset($opts['c'])) {
 }
 
 $sep = isset($opts['F']) && !empty($opts['F']) ? $opts['F'] : ' : ';
-
-$su = new SuperUnit;
 $su->fromString($std, $sep)->determine();
 
 if ($hasStd) { // do validation
@@ -106,6 +124,9 @@ try {
 		printf("%s,\n", $el);
 	}
 	print "\n";
+
+	// from plugin
+	print $su->fromPlugin();
 
 } catch (Exception $e) {
 	fprintf(STDERR, "Error: %s", $e->getMessage());

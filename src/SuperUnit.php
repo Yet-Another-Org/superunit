@@ -16,6 +16,7 @@ class SuperUnit
 	public $ExTp = [];
 
 	private $_sut;
+	private $_plugin = null;
 
 	public static function splitString($string, $sep = '\s+:\s+')
 	{
@@ -35,6 +36,11 @@ class SuperUnit
 		$this->_sut = new SuperUnitType;
 	}
 
+	public function getSut()
+	{
+		return $this->_sut;
+	}
+
 	public function fromString($string, $sep = '\s+:\s+')
 	{
 		$this->Ex = self::splitString($string, $sep);
@@ -44,6 +50,17 @@ class SuperUnit
 	public function fromHtml($html)
 	{
 		return $this->fromString(strip_tags($html));
+	}
+
+	public function setPlugin($plugin)
+	{
+		if (is_callable([$plugin, 'moreTypes'])) {
+			foreach($plugin->moreTypes() as $item) {
+				$this->_sut->install($item['type'], $item['defs'], $item['priority']);
+			}
+		}
+
+		$this->_plugin = $plugin;
 	}
 
 	public function determine(array $ex = [])
@@ -83,6 +100,15 @@ class SuperUnit
 		return true;
 	}
 	/*}}}*/
+
+	// ---- from plugin ----
+	public function fromPlugin()
+	{
+		if (is_callable([$this->_plugin, 'toString'])) {
+			return $this->_plugin->toString($this);
+		}
+		return '';
+	}
 
 	// ---- following functions based on SuperUnitType ----
 	public function form($isEdit = false)
