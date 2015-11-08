@@ -63,6 +63,15 @@ class SuperUnitTypeTest extends PHPUnit_Framework_TestCase
 		$sut->install('dummy', ['determine' => null, 'form' => null]);
 	}
 
+	public function testDefsOrder()
+	{
+		$sut = new SuperUnitType;
+		$ret = '';
+		foreach($sut->defsOrder() as $tp => $p) {
+			$ret .= $tp . $p;
+		}
+		$this->assertEquals('id120password100color90email80url70datetime65date60time60choice50multi-choice50int40float30string20text0', $ret);
+	}
 
 	public function testDefaultTypes()
 	{

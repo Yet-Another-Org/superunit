@@ -13,6 +13,7 @@ namespace SuperUnit;
 class SuperUnitType
 {
 	protected static $_defs = [];
+	protected static $_defsOrder = null; // control the priority of defs
 
 	public static $DefIdName = 'id';
 	public static $DefEdgeStringText = 24;
@@ -31,6 +32,8 @@ class SuperUnitType
 	 */
 	protected static function installDefaults()
 	{
+		self::$_defsOrder = new \SplPriorityQueue;
+
 		$DefIdName = & self::$DefIdName;
 		$DefEdgeStringText = & self::$DefEdgeStringText;
 
@@ -49,6 +52,7 @@ class SuperUnitType
 				return sprintf("`%s` INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY", self::sanitizeName($name));
 			},
 		];
+		self::$_defsOrder->insert('id', 120);
 		// }}}
 		// int type {{{
 		self::$_defs['int'] = [
@@ -65,6 +69,7 @@ class SuperUnitType
 				return sprintf("`%s` INTEGER NOT NULL DEFAULT 0", self::sanitizeName($name));
 			},
 		];
+		self::$_defsOrder->insert('int', 40);
 		// }}}
 		// float type {{{
 		self::$_defs['float'] = [
@@ -81,6 +86,7 @@ class SuperUnitType
 				return sprintf("`%s` DOUBLE NOT NULL DEFAULT 0.0", self::sanitizeName($name));
 			},
 		];
+		self::$_defsOrder->insert('float', 30);
 		// }}}
 		// password type {{{
 		self::$_defs['password'] = [
@@ -97,6 +103,7 @@ class SuperUnitType
 				return sprintf("`%s` VARCHAR(120) NOT NULL DEFAULT ''", self::sanitizeName($name));
 			},
 		];
+		self::$_defsOrder->insert('password', 100);
 		// }}}
 		// color type {{{
 		self::$_defs['color'] = [
@@ -113,6 +120,7 @@ class SuperUnitType
 				return sprintf("`%s` CHAR(7) NOT NULL DEFAULT ''", self::sanitizeName($name));
 			},
 		];
+		self::$_defsOrder->insert('color', 90);
 		// }}}
 		// email type {{{
 		self::$_defs['email'] = [
@@ -129,6 +137,7 @@ class SuperUnitType
 				return sprintf("`%s` VARCHAR(80) NOT NULL DEFAULT ''", self::sanitizeName($name));
 			},
 		];
+		self::$_defsOrder->insert('email', 80);
 		// }}}
 		// url type {{{
 		self::$_defs['url'] = [
@@ -145,6 +154,7 @@ class SuperUnitType
 				return sprintf("`%s` VARCHAR(250) NOT NULL DEFAULT ''", self::sanitizeName($name));
 			},
 		];
+		self::$_defsOrder->insert('url', 70);
 		// }}}
 		// date type {{{
 		self::$_defs['date'] = [
@@ -162,6 +172,7 @@ class SuperUnitType
 				return sprintf("`%s` DATE NOT NULL DEFAULT '0000-00-00'", self::sanitizeName($name));
 			},
 		];
+		self::$_defsOrder->insert('date', 60);
 		// }}}
 		// time type {{{
 		self::$_defs['time'] = [
@@ -179,6 +190,7 @@ class SuperUnitType
 				return sprintf("`%s` TIME NOT NULL DEFAULT '00:00:00'", self::sanitizeName($name));
 			},
 		];
+		self::$_defsOrder->insert('time', 60);
 		// }}}
 		// datetime type {{{
 		self::$_defs['datetime'] = [
@@ -195,6 +207,7 @@ class SuperUnitType
 				return sprintf("`%s` TIMESTAMP NOT NULL DEFAULT 0", self::sanitizeName($name));
 			},
 		];
+		self::$_defsOrder->insert('datetime', 65);
 		// }}}		
 		// choice type {{{
 		self::$_defs['choice'] = [
@@ -216,6 +229,7 @@ class SuperUnitType
 				return sprintf("`%s` TINYINT NOT NULL DEFAULT 0", self::sanitizeName($name));
 			},
 		];
+		self::$_defsOrder->insert('choice', 50);
 		// }}}
 		// multi-choice type {{{
 		self::$_defs['multi-choice'] = [
@@ -237,6 +251,7 @@ class SuperUnitType
 				return sprintf("`%s` VARCHAR(250) NOT NULL DEFAULT ''", self::sanitizeName($name));
 			},
 		];
+		self::$_defsOrder->insert('multi-choice', 50);
 		// }}}
 		// string type {{{
 		self::$_defs['string'] = [
@@ -253,6 +268,7 @@ class SuperUnitType
 				return sprintf("`%s` VARCHAR(250) NOT NULL DEFAULT ''", self::sanitizeName($name));
 			},
 		];
+		self::$_defsOrder->insert('string', 20);
 		// }}}
 		// text type {{{
 		self::$_defs['text'] = [
@@ -269,6 +285,7 @@ class SuperUnitType
 				return sprintf("`%s` TEXT", self::sanitizeName($name));
 			},
 		];
+		self::$_defsOrder->insert('text', 0);
 		// }}}
 	}
 	/*}}}*/
@@ -279,8 +296,10 @@ class SuperUnitType
 	}
 
 	/** install types {{{
+	 *
+	 * @throws SuperUnitTypeException
 	 */
-	public function install($mix, array $defs = [])
+	public function install($mix, array $defs = [], $priority = 10)
 	{
 		$type = gettype($mix);
 		switch ($type) {
@@ -289,6 +308,7 @@ class SuperUnitType
 					throw new SuperUnitTypeException("Type $type must implement ISuperUnitType");
 				}
 				self::$_defs[get_class($mix)] = $mix;
+				self::$_defsOrder->insert(get_class($mix), $priority);
 				break;
 			case 'string':
 				$methods = [];
@@ -300,6 +320,7 @@ class SuperUnitType
 					throw new SuperUnitTypeException("Second argument in install should have " . implode(',', $methods) . " fields");
 				}
 				self::$_defs[$mix] = $defs;
+				self::$_defsOrder->insert($mix, $priority);
 				break;
 			default:
 				throw new SuperUnitTypeException("Unknown type $type");
@@ -312,9 +333,20 @@ class SuperUnitType
 		return self::$_defs;
 	}
 
+	public function defsOrder()
+	{
+		$clone = clone self::$_defsOrder;
+		$clone->setExtractFlags(\SplPriorityQueue::EXTR_BOTH);
+
+		foreach($clone as $item) {
+			yield $item['data'] => $item['priority'];
+		}
+	}
+
 	public function determine($name, $value)
 	{
-		foreach(self::$_defs as $tp => $mix) {
+		foreach($this->defsOrder() as $tp => $priority) {
+			$mix = self::$_defs[$tp];
 			$callback = is_object($mix) ? [$mix, __FUNCTION__] : $mix[__FUNCTION__];
 			$ret = call_user_func($callback, $name, $value);
 			if ($ret) {
@@ -325,6 +357,7 @@ class SuperUnitType
 		return 'text';
 	}
 
+	// @throws SuperUnitTypeException
 	public function __call($method, $args)
 	{
 		if (count($args) < 1) {
