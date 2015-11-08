@@ -70,7 +70,7 @@ class SuperUnitTypeTest extends PHPUnit_Framework_TestCase
 		foreach($sut->defsOrder() as $tp => $p) {
 			$ret .= $tp . $p;
 		}
-		$this->assertEquals('id120int115float110password100color90email80url70date60time60datetime55multi-choice50choice50string20text0', $ret);
+		$this->assertEquals('id120int115bool114float110password100color90email80url70date60time60datetime55multi-choice50choice50string20text0', $ret);
 	}
 
 	public function testDefaultTypes()
@@ -81,6 +81,7 @@ class SuperUnitTypeTest extends PHPUnit_Framework_TestCase
 		$tests['email'] = 'yarco.wang@gmail.com';
 		$tests['float'] = 15.8;
 		$tests['id'] = 1;
+		$tests['bool'] = 'yes';
 		$tests['int'] = 15;
 		$tests['url'] = 'http://www.google.com';
 		$tests['password'] = '******';
@@ -100,6 +101,7 @@ class SuperUnitTypeTest extends PHPUnit_Framework_TestCase
 		$asserts['email'] = '<input type="email" name="email" value="yarco.wang@gmail.com" />';
 		$asserts['float'] = '<input type="text" name="float" value="15.8" />';
 		$asserts['id'] = '<input type="hidden" name="id" value="1" />';
+		$asserts['bool'] = '<select name="bool"><option value=""></option><option value="1">true</option><option value="0">false</option></select>';
 		$asserts['int'] = '<input type="number" name="int" value="15" />';
 		$asserts['url'] = '<input type="url" name="url" value="http://www.google.com" />';
 		$asserts['password'] = '<input type="password" name="password" value="" />';
@@ -119,6 +121,7 @@ class SuperUnitTypeTest extends PHPUnit_Framework_TestCase
 		$asserts['email'] = '`email` VARCHAR(80) NOT NULL DEFAULT \'\'';
 		$asserts['float'] = '`float` DOUBLE NOT NULL DEFAULT 0.0';
 		$asserts['id'] = '`id` INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY';
+		$asserts['bool'] = '`bool` TINYINT NOT NULL DEFAULT 0';
 		$asserts['int'] = '`int` INTEGER NOT NULL DEFAULT 0';
 		$asserts['url'] = '`url` VARCHAR(250) NOT NULL DEFAULT \'\'';
 		$asserts['password'] = '`password` VARCHAR(120) NOT NULL DEFAULT \'\'';

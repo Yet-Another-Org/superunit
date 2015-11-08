@@ -54,6 +54,28 @@ class SuperUnitType
 		];
 		self::$_defsOrder->insert('id', 120);
 		// }}}
+		// bool type {{{
+		self::$_defs['bool'] = [
+			'description' => function() {
+				return "true/false, on/off, yes/no are treated as bool";
+			},
+			'determine' => function($name, $value) {
+				return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) !== null;
+			},
+			'form' => function($name, $value, $isEdit = false) {
+				$value = ['' => '', 1 => 'true', 0 => 'false'];
+				array_walk($value, function(& $item, $k) {
+					$item = sprintf('<option value="%s">%s</option>', $k, self::sanitizeValue($item));
+				});
+				
+				return sprintf('<select name="%s">%s</select>', self::sanitizeName($name), implode('', $value));
+			},
+			'mysql' => function($name, $value) {
+				return sprintf("`%s` TINYINT NOT NULL DEFAULT 0", self::sanitizeName($name));
+			},
+		];
+		self::$_defsOrder->insert('bool', 114);
+		// }}}
 		// int type {{{
 		self::$_defs['int'] = [
 			'description' => function() {

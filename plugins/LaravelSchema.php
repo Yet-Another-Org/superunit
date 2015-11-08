@@ -32,6 +32,9 @@ class LaravelSchema
 			case 'multi-choice':
 				$s = sprintf("\$table->string('%s');", $name);
 				break;
+			case 'bool':
+				$s = sprintf("\$table->boolean('%s');", $name);
+				break;
 			case 'int':
 				$s = sprintf("\$table->integer('%s');", $name);
 				break;
