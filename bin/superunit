@@ -6,7 +6,7 @@ require_once dirname(__DIR__) . '/autoload.php';
 
 use SuperUnit\SuperUnit;
 
-$opts = getopt('c:F:hp:');
+$opts = getopt('c:F:hp:s::');
 $su = new SuperUnit;
 
 // info
@@ -50,10 +50,11 @@ superunit [options] -- a special code generator for fast php prototype and conte
   encoding: utf-8
 
 options:
-  -c <file> ---- standard file, if not set, use stdin
+  -c <file> ---- standard file, if not set, use stdin (used in validation)
   -F <sep> ---- seperator, default is ' : '
   -h ---- show this help
   -p <plugin> ---- load the plugin
+  -s [name] ---- only show one of: json, addform, editform, mysql, default(ommit the value) will show the type
 
 plugin: should be one of `$t`
 
@@ -93,38 +94,47 @@ if ($hasStd) { // do validation
 	exit;
 }
 
-// show type
-printf("%'-20s%'-14s%'-44s--\n", 'Key', 'Type', 'Value');
-foreach($su->ExTp as $name => $tp) {
-	$value = strlen($su->Ex[$name]) > 38 ? substr(str_replace("\n", "\\n", $su->Ex[$name]), 0, 38) . '...' : str_replace("\n", "\\n", $su->Ex[$name]);
-	printf("|%19s%14s%44s |\n", strlen($name) > 19 ? substr($name, 0, 16) . '...' : $name, $tp, $value);
-};
+if (!isset($opts['s']) || empty($opts['s'])) {
+	// show type
+	printf("%'-20s%'-14s%'-44s--\n", 'Key', 'Type', 'Value');
+	foreach($su->ExTp as $name => $tp) {
+		$value = strlen($su->Ex[$name]) > 38 ? substr(str_replace("\n", "\\n", $su->Ex[$name]), 0, 38) . '...' : str_replace("\n", "\\n", $su->Ex[$name]);
+		printf("|%19s%14s%44s |\n", strlen($name) > 19 ? substr($name, 0, 16) . '...' : $name, $tp, $value);
+	};
+}
 
 try {
-	// show json
-	printf("%'-43s%'-37s\n", 'As Json', '');
-	print json_encode($su->Ex) . "\n";
-	print json_encode($su->ExTp) . "\n";
-	print "\n";
-	// show Add Form
-	printf("%'-44s%'-36s\n", 'Add Form', '');
-	foreach($su->form() as $el) {
-		printf("%s\n", $el);
+	if (!isset($opts['s']) || $opts['s'] === 'json') {
+		// show json
+		printf("%'-43s%'-37s\n", 'As Json', '');
+		print json_encode($su->Ex) . "\n";
+		print json_encode($su->ExTp) . "\n";
+		print "\n";
 	}
-	print "\n";
-	// show Edit Form
-	printf("%'-44s%'-36s\n", 'Edit Form', '');
-	foreach($su->form(true) as $el) {
-		printf("%s\n", $el);
+	if (!isset($opts['s']) || $opts['s'] === 'addform') {
+		// show Add Form
+		printf("%'-44s%'-36s\n", 'Add Form', '');
+		foreach($su->form() as $el) {
+			printf("%s\n", $el);
+		}
+		print "\n";
 	}
-	print "\n";
-	// show Dump Mysql
-	printf("%'-45s%'-35s\n", 'Dump Mysql', '');
-	foreach($su->mysql() as $el) {
-		printf("%s,\n", $el);
+	if (!isset($opts['s']) || $opts['s'] === 'editform') {
+		// show Edit Form
+		printf("%'-44s%'-36s\n", 'Edit Form', '');
+		foreach($su->form(true) as $el) {
+			printf("%s\n", $el);
+		}
+		print "\n";
 	}
-	print "\n";
-
+	if (!isset($opts['s']) || $opts['s'] === 'mysql') {
+		// show Dump Mysql
+		printf("%'-45s%'-35s\n", 'Dump Mysql', '');
+		foreach($su->mysql() as $el) {
+			printf("%s,\n", $el);
+		}
+		print "\n";
+	}
 	// from plugin
 	print $su->fromPlugin();
 
